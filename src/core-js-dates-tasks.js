@@ -148,7 +148,12 @@ function isDateInPeriod(date, period) {
  * '2010-12-15T22:59:00.000Z' => '12/15/2010, 10:59:00 PM'
  */
 function formatDate(date) {
-  return new Date(date);
+  const pad = (i) => `00${i}`.slice(-2);
+
+  const d = new Date(date);
+  const dd = `${d.getUTCMonth() + 1}/${d.getUTCDate()}/${d.getUTCFullYear()}`;
+  const t = `${d.getUTCHours() % 12 === 0 ? 12 : d.getUTCHours() % 12}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} ${d.getUTCHours() >= 12 ? 'PM' : 'AM'}`;
+  return `${dd}, ${t}`;
 }
 
 /**
@@ -164,16 +169,18 @@ function formatDate(date) {
  * 1, 2024 => 8
  */
 function getCountWeekendsInMonth(month, year) {
-  let current = new Date(year, month, 1);
-  let result = 0;
+  const date = new Date(year);
+  date.setUTCMonth(month - 1);
+  date.setUTCDate(1);
 
-  for (let i = 0; i < getCountDaysInMonth(month, year); i += 1) {
-    if (current.getDay() === 0 && current.getDay() === 6) result += 1;
+  let counter = 0;
 
-    current = new Date(current.setDate(current.getDate() + 1));
+  while (date.getUTCMonth() === month - 1) {
+    if (date.getUTCDay() === 0 || date.getUTCDay() === 6) counter += 1;
+    date.setDate(date.getDate() + 1);
   }
 
-  return result;
+  return counter;
 }
 
 /**
@@ -188,8 +195,9 @@ function getCountWeekendsInMonth(month, year) {
  * Date(2024, 0, 31) => 5
  * Date(2024, 1, 23) => 8
  */
-function getWeekNumberByDate(/* date */) {
-  throw new Error('Not implemented');
+function getWeekNumberByDate(date) {
+  const start = new Date(date.getFullYear(), 0, 1);
+  return Math.ceil(((date - start) / 86400000 + start.getDay()) / 7);
 }
 
 /**
@@ -203,8 +211,16 @@ function getWeekNumberByDate(/* date */) {
  * Date(2024, 0, 13) => Date(2024, 8, 13)
  * Date(2023, 1, 1) => Date(2023, 9, 13)
  */
-function getNextFridayThe13th(/* date */) {
-  throw new Error('Not implemented');
+function getNextFridayThe13th(date) {
+  const curDate = date;
+
+  while (!(curDate.getUTCDate() === 12 && curDate.getUTCDay() === 4)) {
+    curDate.setUTCDate(curDate.getUTCDate() + 1);
+  }
+
+  curDate.setUTCHours(curDate.getUTCHours() - 1);
+
+  return curDate;
 }
 
 /**
@@ -218,8 +234,8 @@ function getNextFridayThe13th(/* date */) {
  * Date(2024, 5, 1) => 2
  * Date(2024, 10, 10) => 4
  */
-function getQuarter(/* date */) {
-  throw new Error('Not implemented');
+function getQuarter(date) {
+  return Math.floor((date.getMonth() + 1) / 4) + 1;
 }
 
 /**
@@ -256,8 +272,9 @@ function getWorkSchedule(/* period, countWorkDays, countOffDays */) {
  * Date(2022, 2, 1) => false
  * Date(2020, 2, 1) => true
  */
-function isLeapYear(/* date */) {
-  throw new Error('Not implemented');
+function isLeapYear(date) {
+  const y = date.getFullYear();
+  return y % 4 === 0 && (y % 100 !== 0 || y % 400 === 0);
 }
 
 module.exports = {
